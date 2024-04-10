@@ -140,7 +140,7 @@ except FileNotFoundError:
 with open('alphabet.txt', 'r') as f:
     lines = f.readlines()
 frequency = {line.split()[0]: float(line.split()[1]) for line in lines}
-with open('input.txt', 'r') as f:
+with open('input2.txt', 'r') as f:
     string = f.read().strip()
 
 encodeHuffman(frequency, string)
