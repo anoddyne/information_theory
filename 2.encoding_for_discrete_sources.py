@@ -10,8 +10,6 @@ def func_result_output(output):
         file.write(output + '\n')
         print(output)
 
-def func_codeLength(prob):
-    return math.ceil(-math.log2(prob))
 
 def encodeHuffman(frequency, string):
     heap = [[weight, [symbol, ""]] for symbol, weight in frequency.items()]
@@ -44,11 +42,7 @@ def encodeHuffman(frequency, string):
     print("Decoded message using Huffman Encode: ", decoded)
 
 
-""" mod = 0 to use the usual Shannon encoding;
-    mod = 1 to use the Shannon–Fano–Elias encoding """
-
-
-def encodeShannon(frequency, string, mod=0):
+def encodeShannon(frequency, string):
     """Calculating cumulative probabilities"""
     cumulative_freq = defaultdict(float)
     sum_freq = 0
@@ -61,30 +55,59 @@ def encodeShannon(frequency, string, mod=0):
     for char in string:
         probability = frequency[char]
         F = cumulative_freq[char]
-        code_length = func_codeLength(probability)
-        # code_length = math.ceil(-math.log2(probability / 2)) + 1
-        code = math.floor((F + probability / 2) * 2 ** code_length) if mod == 1 else math.floor(
-            F * 2 ** code_length)
+        code_length = math.ceil(-math.log2(probability))
+        code = math.floor(F * 2 ** code_length)
         output += bin(code)[2:].zfill(code_length)
 
     func_result_output(output)
 
     """Decoding the message"""
     decoded = ""
-    mod_choice = (probability / 2) if mod == 1 else 0
     while output:
         for char, probability in frequency.items():
-            code_length = func_codeLength(probability)
-            # code_length = math.ceil(-math.log2(probability / 2)) + 1
+            code_length = math.ceil(-math.log2(probability))
             code = int(output[:code_length], 2)
-            if math.floor((cumulative_freq[char] + mod_choice) * 2 ** code_length) <= code < math.floor(
-                    (cumulative_freq[char] + probability + mod_choice) * 2 ** code_length):
+            if math.floor((cumulative_freq[char]) * 2 ** code_length) <= code < math.floor(
+                    (cumulative_freq[char] + probability) * 2 ** code_length):
                 decoded += char
                 output = output[code_length:]
                 break
 
-    mod_print = "Shannon-Fano–Elias" if mod == 1 else "Shannon"
-    print(f"Decoded message using {mod_print} Encode: ", decoded)
+    print("Decoded message using Shannon Encode: ", decoded)
+
+
+def encodeShannonFanoElias(frequency, string):
+    """Calculating cumulative probabilities"""
+    cumulative_freq = defaultdict(float)
+    sum_freq = 0
+    for char in sorted(frequency.keys()):
+        cumulative_freq[char] = sum_freq
+        sum_freq += frequency[char]
+
+    """Encoding the message"""
+    output = ""
+    for char in string:
+        probability = frequency[char]
+        F = cumulative_freq[char]
+        code_length = math.ceil(math.log2(1/probability)) + 1
+        code = math.floor((F + probability / 2) * 2 ** code_length)
+        output += bin(code)[2:].zfill(code_length)
+
+    func_result_output(output)
+
+    """Decoding the message"""
+    decoded = ""
+    additional_summand = probability / 2
+    while output:
+        for char, probability in frequency.items():
+            code_length = math.ceil(math.log2(1/probability)) + 1
+            code = int(output[:code_length], 2)
+            if math.floor((cumulative_freq[char] + additional_summand) * 2 ** code_length) <= code < math.floor((cumulative_freq[char] + probability + additional_summand) * 2 ** code_length):
+                decoded += char
+                output = output[code_length:]
+                break
+
+    print("Decoded message using Shannon-Fano-Elias Encode: ", decoded)
 
 
 def encodeGilbertMoore(frequency, string):
@@ -98,8 +121,7 @@ def encodeGilbertMoore(frequency, string):
     for i in range(num_symbols):
         cumulative_probs[i] = cumulative_prob + symb_probabilities[i] / 2
         cumulative_prob += symb_probabilities[i]
-        code_lengths[i] = func_codeLength(symb_probabilities[i])
-        #code_lengths[i] = math.ceil(-math.log2(symb_probabilities[i] / 2)) + 1
+        code_lengths[i] = math.ceil(-math.log2(symb_probabilities[i]/2))+1
 
     """Generate code table"""
     code_table = [[0] * max(code_lengths) for _ in range(num_symbols)]
@@ -114,7 +136,8 @@ def encodeGilbertMoore(frequency, string):
     output = ''
     for char in string:
         index = symbols.index(char)
-        output += ''.join([str(bit) for bit in code_table[index][:code_lengths[index]]])
+        output += ''.join([str(bit)
+                          for bit in code_table[index][:code_lengths[index]]])
 
     func_result_output(output)
 
@@ -161,9 +184,6 @@ if len(check) != 0:
     exit()
 
 encodeHuffman(frequency, string)
-
-""" mod = 0 to use the usual Shannon encoding;
-    mod = 1 to use the Shannon–Fano–Elias encoding """
 encodeShannon(frequency, string)
-encodeShannon(frequency, string, 1)
+encodeShannonFanoElias(frequency, string)
 encodeGilbertMoore(frequency, string)
