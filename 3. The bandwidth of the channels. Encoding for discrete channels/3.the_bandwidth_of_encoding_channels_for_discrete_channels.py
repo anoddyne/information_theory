@@ -4,7 +4,7 @@ import math
 from collections import defaultdict
 import os
 
-os.chdir('S:/Coding/information_theory/3. The bandwidth of the channels. Encoding for discrete channels/')
+os.chdir('C:/Users/anodd/Documents/coding/information_theory/3. The bandwidth of the channels. Encoding for discrete channels/')
 
 def encode_Shannon(frequency, string):
     """Calculating cumulative probabilities"""
